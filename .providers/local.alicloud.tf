@@ -12,9 +12,15 @@ terraform {
 
 variable "ali_key" { type = string }
 variable "ali_secret" { type = string }
+variable "ali_primary_region" {
+  type    = string
+  default = "cn-shanghai"
+}
 
 provider "alicloud" {
   access_key = var.ali_key
   secret_key = var.ali_secret
-  region     = local.ali_region
+  region     = var.ali_primary_region
 }
+
+data "alicloud_account" "this" {}
