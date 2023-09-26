@@ -1,14 +1,10 @@
 # ln -s ../.secret/1password.tfvars ./1password.auto.tfvars
 # ln -s ../.providers/local.1password.tf ./prov.1password.tf
 
-terraform {
-  required_providers {
-    onepasswordorg = {
-      source  = "golfstrom/onepasswordorg"
-      version = "1.0.0-rc.5"
-    }
-  }
-}
+#   onepasswordorg = {
+#     source  = "golfstrom/onepasswordorg"
+#     version = "1.0.0-rc.5"
+#   }
 
 variable "op_address" {
   type    = string
