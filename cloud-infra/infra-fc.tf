@@ -27,7 +27,7 @@ resource "alicloud_ram_policy" "infra_fc" {
       "Effect": "Allow",
       "Action": ["log:PostLogStoreLogs"],
       "Resource": [
-        "acs:log:*:${data.alicloud_account.this.id}:project/${alicloud_log_project.infra.name}/logstore/*"
+        "acs:log:*:${data.alicloud_account.this.id}:project/${alicloud_log_project.infra.project_name}/logstore/*"
       ]
     }
   ]
@@ -56,15 +56,15 @@ EOF
 
 resource "alicloud_ram_role_policy_attachment" "infra_fc" {
   role_name   = alicloud_ram_role.infra_fc.name
-  policy_name = alicloud_ram_policy.infra_fc.name
+  policy_name = alicloud_ram_policy.infra_fc.policy_name
   policy_type = alicloud_ram_policy.infra_fc.type
 }
 
 
 # Log
 resource "alicloud_log_store" "infra_fc" {
-  project = alicloud_log_project.infra.name
-  name    = "functions"
+  project_name  = alicloud_log_project.infra.project_name
+  logstore_name = "functions"
 }
 
 # FC
@@ -73,19 +73,11 @@ resource "alicloud_fc_service" "infra_fc" {
   description = "Infrastructure functions, managed by Terraform"
   role        = alicloud_ram_role.infra_fc.arn
   log_config {
-    project                 = alicloud_log_project.infra.name
-    logstore                = alicloud_log_store.infra_fc.name
+    project                 = alicloud_log_project.infra.project_name
+    logstore                = alicloud_log_store.infra_fc.logstore_name
     enable_instance_metrics = true
     enable_request_metrics  = true
   }
   depends_on = [alicloud_ram_role_policy_attachment.infra_fc]
 }
 
-resource "local_file" "infra_variables" {
-  filename = "../.secret/alicloud.infra.tfvars"
-  content  = <<EOF
-# ln -s ../.secret/alicloud.infra.tfvars ./alicloud.infra.auto.tfvars
-infra_id     = "${local.infra_id}"
-infra_fc_srv = "${alicloud_fc_service.infra_fc.name}"
-EOF
-}
