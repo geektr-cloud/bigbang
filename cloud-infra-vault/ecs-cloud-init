@@ -1,0 +1,126 @@
+#cloud-config
+hostname: ${hostname}
+fqdn: ${fqdn_private}
+prefer_fqdn_over_hostname: true
+
+timezone: Asia/Shanghai
+
+ssh_pwauth: false
+
+users:
+  - name: geektr
+    gecos: admin user
+    primary_group: geektr
+    shell: /bin/bash
+    groups: [sudo]
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCc72lsFSvgEyprw4ig/ikiREXtcIqRgM42KK92DNQiJ1JjC3amRbQER57ww7V3ygPJ7UPqg6VjnHrKpfumbfCaC33uBI5DEaJRERmKXqtRR6KpQ0tDz5S5H9wAus3xhT3s73hY9JVUnKADpd3PKT/JAiTUEChaMkesYr6r4tmh5ChEYG8sCCok3xXdUIRGYx4Alg2LkQ3wh8Z2tp+r2MDKxLLWblcXTPPl4iOekKyPjpqwJr5e8U6/WOxcMFvZaO0BEM8WcGLXNrSExpe1J0H8lLkhfoXofqv+UvT7RBx9neCfnlBpTGInY7aM5WmQJl68jyOlO85A7LLr2KL9SJ/iEgLYu/4Aq7sumyPjJ8yJ1j10ZjrhfmJtAGolON0tyoTZOsbJl1VDVyki8TEgKSji40jrgDvxHEUBXywKclZulYfC5EkItdExBU+YylXJGweFKKSbnhV9k0dUNjnQW6HSeldSRtS4l0J25f9gqNr5cssyTf6SH0DF8z5YleMK2u2oNzit856Bs2CcyYpTRQEel/cisgPpqSU0TVWdxyEKtXWqyIup8BHvWNq9w0S0PQl80I3Cefc7belREsdklHXIxpcWnsfZBmy2HyhE3Wj3PxIdUmqqpwwCUETL+i7oEkbmMnwVL7xybvljMqL7TDpMkvPZjelp/LUfZrjvrXfvow== geektr@geektr.co
+
+package_update: true
+package_upgrade: true
+packages:
+  - axel
+  - curl
+  - dnsutils
+  - git-lfs
+  - htop
+  - jq
+  - mtr
+  - net-tools
+  - rsync
+  - screen
+  - software-properties-common
+  - tmux
+  - tree
+  - unzip
+  - vim
+  - wget
+  - zip
+
+write_files:
+  - path: /etc/rancher/k3s/registries.yaml
+    owner: root:root
+    content: |
+      mirrors:
+        "docker.io":
+          endpoint:
+            - "https://docker.m.daocloud.io"
+            - "https://dockerproxy.com"
+            - "https://docker.nju.edu.cn"
+            - "https://registry-1.docker.io"
+            - "https://mirror.baidubce.com"
+        "ghcr.io":
+          endpoint:
+            - "https://ghcr.dockerproxy.com"
+            - "https://ghcr.nju.edu.cn"
+            - "https://ghcr.m.daocloud.io"
+        "gcr.io":
+          endpoint:
+            - "https://gcr.dockerproxy.com"
+            - "https://gcr.nju.edu.cn"
+            - "https://gcr.m.daocloud.io"
+        "quay.io":
+          endpoint:
+            - "https://quay.dockerproxy.com"
+            - "https://quay.nju.edu.cn"
+            - "https://quay.m.daocloud.io"
+        "mcr.microsoft.com":
+          endpoint:
+            - "https://mcr.dockerproxy.com"
+            - "https://mcr.m.daocloud.io"
+  - path: /var/lib/rancher/k3s/server/manifests/cert-manager.yaml
+    owner: root:root
+    content: |
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: cert-manager
+      ---
+      apiVersion: helm.cattle.io/v1
+      kind: HelmChart
+      metadata:
+        name: cert-manager
+        namespace: cert-manager
+      spec:
+        repo: https://charts.jetstack.io
+        chart: cert-manager
+        targetNamespace: cert-manager
+        version: v1.14.2
+        valuesContent: |-
+          installCRDs: "true"
+          nodeSelector:
+            node-role.kubernetes.io/master: "true"
+          webhook:
+            nodeSelector:
+              node-role.kubernetes.io/master: "true"
+          cainjector:
+            nodeSelector:
+              node-role.kubernetes.io/master: "true"
+
+  - path: /etc/rancher/k3s/config.yaml
+    owner: root:root
+    content: |
+      ${jsonencode(k3s_config)}
+
+runcmd:
+  - |
+    curl -sfL \
+      https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | \
+      INSTALL_K3S_MIRROR=cn sh -s - \
+      --system-default-registry "registry.cn-hangzhou.aliyuncs.com"
+
+disk_setup:
+  /dev/vdb:
+    table_type: gpt
+    layout: false
+    overwrite: true
+
+fs_setup:
+  - label: k3s-data
+    filesystem: ext4
+    device: /dev/vdb
+
+mounts:
+  - ["/dev/vdb", "/mnt/k3s-data"]
