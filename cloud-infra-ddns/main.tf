@@ -13,14 +13,11 @@ terraform {
   }
 }
 
-# ln -s ../.secret/alicloud.infra.tfvars ./alicloud.infra.auto.tfvars
-variable "infra_fc_srv" { type = string }
-
 provider "zipper" {}
 resource "zipper_file" "ddns_package" {
   type        = "local"
   source      = "./ddns"
-  output_path = "/tmp/${var.infra_fc_srv}-ddns-${filemd5("./ddns/index.js")}.zip"
+  output_path = "/tmp/${var.infra_id}-ddns-${filemd5("./ddns/index.js")}.zip"
 }
 
 resource "tls_private_key" "ddns_sign_key_pair" { algorithm = "ECDSA" }
@@ -34,7 +31,7 @@ resource "local_file" "ddns_sign_key_public" {
 }
 
 resource "alicloud_fc_function" "ddns" {
-  service     = var.infra_fc_srv
+  service     = var.infra_id
   name        = "ddns"
   description = "dynamic dns function"
   memory_size = "128"
