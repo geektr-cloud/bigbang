@@ -23,6 +23,3 @@ provider "kubectl" { config_path = "${path.module}/../../.secret/cloud-infra-vau
 resource "kubernetes_namespace" "this" {
   metadata { name = "vault" }
 }
-
-variable "infra_id" { type = string }
-variable "infra_fc_srv" { type = string }

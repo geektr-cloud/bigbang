@@ -21,9 +21,6 @@ data "alicloud_zones" "zones" {
 
 resource "random_shuffle" "zone" { input = data.alicloud_zones.zones.ids }
 
-variable "infra_id" { type = string }
-variable "infra_fc_srv" { type = string }
-
 locals {
   infra_id                = var.infra_id
   vpc                     = data.terraform_remote_state.cloud_infra.outputs.infra_vpc
