@@ -3,7 +3,7 @@
 
 #   alicloud = {
 #     source  = "aliyun/alicloud"
-#     version = "1.199.0"
+#     version = "~> 1"
 #   }
 
 variable "ali_key" { type = string }
@@ -20,3 +20,5 @@ provider "alicloud" {
 }
 
 data "alicloud_account" "this" {}
+
+variable "infra_id" { type = string }
