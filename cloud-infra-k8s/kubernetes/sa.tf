@@ -13,6 +13,7 @@ module "kubernetes_admin" {
   extra = {
     primary_domain = "psyduck.pokemon.geektr.co"
     cluster_issuer = "letsencrypt-prod"
+    middlewares    = local.middlewares
   }
 }
 
