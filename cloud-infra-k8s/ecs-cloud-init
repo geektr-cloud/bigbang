@@ -98,6 +98,19 @@ write_files:
           cainjector:
             nodeSelector:
               node-role.kubernetes.io/master: "true"
+  - path: /var/lib/rancher/k3s/server/manifests/keel.yaml
+    owner: root:root
+    content: |
+      apiVersion: helm.cattle.io/v1
+      kind: HelmChart
+      metadata:
+        name: keel
+        namespace: kube-system
+      spec:
+        repo: https://charts.keel.sh
+        chart: keel
+        targetNamespace: kube-system
+        version: v1.0.3
 
   - path: /etc/rancher/k3s/config.yaml
     owner: root:root
