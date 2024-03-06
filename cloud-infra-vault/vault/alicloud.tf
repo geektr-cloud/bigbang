@@ -4,7 +4,7 @@ data "terraform_remote_state" "cloud_infra" {
 }
 
 module "alicloud_admin" {
-  source = "/home/geektr/projects/github.com/geektheripper/terraform-helpers/providers/alicloud/vault/new"
+  source = "github.com/geektheripper/terraform-helpers//providers/alicloud/vault/new"
 
   vault_mount = vault_mount.terraform.path
   vault_key   = "infra/alicloud-geektr/keys/terraform-admin"

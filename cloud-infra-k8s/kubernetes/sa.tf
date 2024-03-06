@@ -1,5 +1,5 @@
 module "kubernetes_admin" {
-  source = "/home/geektr/projects/github.com/geektheripper/terraform-helpers/providers/terraform/vault-sa/new"
+  source = "github.com/geektheripper/terraform-helpers//providers/k8s/vault-sa/new"
 
   vault_mount = module.vault.mount
   vault_key   = "infra/kubernetes-pokemon/tokens/terraform-admin"

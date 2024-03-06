@@ -18,7 +18,7 @@ terraform {
 }
 
 module "vault" {
-  source   = "/home/geektr/projects/github.com/geektheripper/terraform-helpers/providers/vault/approle-file"
+  source   = "github.com/geektheripper/terraform-helpers//providers/vault/approle-file"
   filename = "${path.module}/../../.secret/vault-approle-terraform.json"
 }
 
@@ -34,7 +34,7 @@ provider "vault" {
 }
 
 module "alicloud" {
-  source = "/home/geektr/projects/github.com/geektheripper/terraform-helpers/providers/alicloud/vault"
+  source = "github.com/geektheripper/terraform-helpers//providers/alicloud/vault"
 
   vault_mount = module.vault.mount
   vault_key   = "infra/alicloud-geektr/keys/terraform-admin"
@@ -47,7 +47,7 @@ provider "alicloud" {
 }
 
 module "kubernetes" {
-  source = "/home/geektr/projects/github.com/geektheripper/terraform-helpers/providers/terraform/vault-sa"
+  source = "github.com/geektheripper/terraform-helpers//providers/k8s/vault-sa"
 
   vault_mount = module.vault.mount
   vault_key   = "infra/kubernetes-pokemon/tokens/terraform-admin"

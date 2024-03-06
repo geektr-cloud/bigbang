@@ -17,7 +17,7 @@ resource "vault_auth_backend" "terraform_role" {
 }
 
 module "terraform_role" {
-  source = "/home/geektr/projects/github.com/geektheripper/terraform-helpers/providers/vault/approle-file/new"
+  source = "github.com/geektheripper/terraform-helpers//providers/vault/approle-file/new"
 
   filename = "${path.module}/../../.secret/vault-approle-terraform.json"
 

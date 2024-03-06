@@ -14,7 +14,7 @@ terraform {
 }
 
 module "vault" {
-  source   = "/home/geektr/projects/github.com/geektheripper/terraform-helpers/providers/vault/approle-file"
+  source   = "github.com/geektheripper/terraform-helpers//providers/vault/approle-file"
   filename = "${path.module}/../.secret/vault-approle-terraform.json"
 }
 
@@ -30,7 +30,7 @@ provider "vault" {
 }
 
 module "alicloud" {
-  source = "/home/geektr/projects/github.com/geektheripper/terraform-helpers/providers/alicloud/vault"
+  source = "github.com/geektheripper/terraform-helpers//providers/alicloud/vault"
 
   vault_mount = module.vault.mount
   vault_key   = "infra/alicloud-geektr/keys/terraform-admin"
@@ -47,7 +47,10 @@ data "alicloud_zones" "this" {
   available_disk_category = "cloud_efficiency"
 }
 
-resource "random_shuffle" "zone" { input = data.alicloud_zones.this.ids }
+resource "random_shuffle" "zone" {
+  input = data.alicloud_zones.this.ids
+  lifecycle { ignore_changes = [input] }
+}
 
 locals {
   infra_id          = module.alicloud.extra.infra_id
