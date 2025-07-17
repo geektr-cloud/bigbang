@@ -1,7 +1,7 @@
 locals { cloud_cidr = "10.16.0.0/12" }
 
 resource "alicloud_vpc" "infra" {
-  vpc_name          = local.infra_id
+  vpc_name          = module.startup.cred.infra_id
   cidr_block        = cidrsubnet(local.cloud_cidr, 8, 4)
   enable_ipv6       = true
   description       = "Managed by Terraform"

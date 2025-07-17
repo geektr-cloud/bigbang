@@ -8,24 +8,32 @@ terraform {
   }
 }
 
-resource "random_string" "infra_id" {
-  length  = 6
-  upper   = false
-  special = false
+module "this" { source = "github.com/linolabx/tfmodules?ref=module-info@v0.0.1" }
+module "startup" {
+  source     = "github.com/linolabx/tfmodules?ref=module-info@v0.0.1"
+  module_rel = "startup"
 }
-
-locals { infra_id = "infra-${random_string.infra_id.result}" }
+provider "alicloud" {
+  access_key = module.startup.cred.aliyun.access_key
+  secret_key = module.startup.cred.aliyun.secret_key
+  region     = module.startup.cred.aliyun.region
+}
+data "alicloud_account" "this" {}
 
 resource "alicloud_resource_manager_resource_group" "infra" {
-  resource_group_name = local.infra_id
+  resource_group_name = module.startup.cred.infra_id
   display_name        = "Infrastructure"
 }
 
-resource "local_file" "infra_variables" {
-  filename = "../.secret/alicloud.infra.tfvars"
-  content  = <<EOF
-# ln -s ../.secret/alicloud.infra.tfvars ./alicloud.infra.auto.tfvars
-infra_id     = "${local.infra_id}"
-infra_fc_srv = "${alicloud_fc_service.infra_fc.name}"
-EOF
+resource "local_file" "output" {
+  filename = module.this.outputs_file
+  content = yamlencode({
+    infra_id = module.startup.cred.infra_id
+
+    fc_service = alicloud_fc_service.infra_fc
+
+    vpc            = alicloud_vpc.infra
+    vswitches      = alicloud_vswitch.infra
+    resource_group = alicloud_resource_manager_resource_group.infra
+  })
 }

@@ -1,7 +1,7 @@
 resource "alicloud_security_group" "infra_public_web" {
-  vpc_id      = alicloud_vpc.infra.id
-  name        = "pub:web"
-  description = "Managed by Terraform"
+  vpc_id              = alicloud_vpc.infra.id
+  security_group_name = "pub:web"
+  description         = "Managed by Terraform"
 
   inner_access_policy = "Drop"
   security_group_type = "normal"
