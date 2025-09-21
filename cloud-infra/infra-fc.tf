@@ -1,6 +1,6 @@
 # RAM
 resource "alicloud_ram_policy" "infra_fc" {
-  policy_name = "InfraFCRolePolicy-${module.startup.cred.infra_id}"
+  policy_name = "InfraFCRolePolicy-${local.infra.id}"
   policy_document = jsonencode({
     Version = "1",
     Statement = [
@@ -19,7 +19,7 @@ resource "alicloud_ram_policy" "infra_fc" {
           "alidns:RefreshDomainRecord"
         ],
         Resource = [
-          "acs:alidns:*:${data.alicloud_account.this.id}:domain/${module.startup.cred.base_domain}"
+          "acs:alidns:*:${data.alicloud_account.this.id}:domain/${local.infra.base_domain}"
         ]
       },
       {
@@ -37,7 +37,7 @@ resource "alicloud_ram_policy" "infra_fc" {
 }
 
 resource "alicloud_ram_role" "infra_fc" {
-  role_name = "AliyunFCRole-${module.startup.cred.infra_id}"
+  role_name = "AliyunFCRole-${local.infra.id}"
   assume_role_policy_document = jsonencode({
     Statement = [{
       Action    = "sts:AssumeRole"
@@ -65,7 +65,7 @@ resource "alicloud_log_store" "infra_fc" {
 
 # FC
 resource "alicloud_fc_service" "infra_fc" {
-  name        = module.startup.cred.infra_id
+  name        = local.infra.id
   description = "Infrastructure functions, managed by Terraform"
   role        = alicloud_ram_role.infra_fc.arn
   log_config {

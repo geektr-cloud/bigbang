@@ -1,7 +1,7 @@
 locals { cloud_cidr = "10.16.0.0/12" }
 
 resource "alicloud_vpc" "infra" {
-  vpc_name          = module.startup.cred.infra_id
+  vpc_name          = local.infra.id
   cidr_block        = cidrsubnet(local.cloud_cidr, 8, 4)
   enable_ipv6       = true
   description       = "Managed by Terraform"
@@ -28,7 +28,7 @@ locals {
 
 # substr(id, -1, 1)
 # get last character of id, for example: cn-shanghai-a => a
-# 
+#
 # parseint(v, 46) - 10
 # convert v to letter index, for example: a => 0
 resource "alicloud_vswitch" "infra" {
