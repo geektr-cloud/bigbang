@@ -37,3 +37,5 @@ terraform.rc
 secret.hc
 secret
 .secret
+
+playground

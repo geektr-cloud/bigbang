@@ -1,6 +1,28 @@
 # This file is maintained automatically by "terraform init".
 # Manual edits may be lost in future updates.
 
+provider "registry.terraform.io/anitya-tech/tfproj" {
+  version = "0.0.1"
+  hashes = [
+    "h1:fnGx7Ux+vH9U9kNORSbJD8kEC5Hgoldgf2M09jELljs=",
+    "zh:1a75daecf2ef44c6bd8167fa4b8f37d5a8b78a50400bdede250308197b14e411",
+    "zh:4335267d73a9d4db462f29df2af5252bf09f5c8b6bd4418f774bc87cb1833c4e",
+    "zh:5699530371ff3146f2639f76cc2140f19bfba7fe526d9b751d0bd21b2489cd64",
+    "zh:6053e5d113d08718857e168c881e62d5763402d79865eb349022a3fffcaf3136",
+    "zh:613e88cffb9aadda547091c8080cc1db42c478c2f0c032735e35ff868835dc12",
+    "zh:6b4f591e6b38248692baebec836be7dd3cacac6328e96e1ab9a59a8b5a09f584",
+    "zh:890df766e9b839623b1f0437355032a3c006226a6c200cd911e15ee1a9014e9f",
+    "zh:b126dc81b9a4a7ab4c722956d90f6b972df86857b135db0cfc8a640fcc6a03e8",
+    "zh:b938013e3a491e31de601b7ead78368d010faa824269c44aa8617af06c077d7a",
+    "zh:e0882d229cbed2fa8bb0a1ed3c8c67b5e8eb0a62fe8dc9bc13492fa610579818",
+    "zh:e4700c5db67e6a6086ff286b671be69f35b3e0371acfd030e4d33350e8cfcdc2",
+    "zh:f538eac039dc3afe81a0cb4b25f2c6e0078a2e30f93027a2aeaf83113f55054e",
+    "zh:f6594ab44a889c6d6d457d76c63b0bcc663c0c4876180d1bc771865d5aebe321",
+    "zh:f747b272e605b67ae83e99761b60bd3741b52e9758c1a177c034613250e7fa3e",
+    "zh:f8fe60cc79de6f339de5ae1bd234a15782eff08e58c4e9f38ef2d918de88dfd8",
+  ]
+}
+
 provider "registry.terraform.io/hashicorp/external" {
   version = "2.3.5"
   hashes = [

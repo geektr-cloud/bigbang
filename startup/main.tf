@@ -1,22 +1,11 @@
 terraform {
-  backend "local" { path = "../.secret/tfstates/startup/terraform.tfstate" }
-}
-
-module "startup" { source = "github.com/linolabx/tfmodules?ref=module-info@v0.0.1" }
-
-variable "ali_key" {
-  type        = string
-  description = "Aliyun Access Key with Administrator Privileges"
-}
-variable "ali_secret" {
-  type        = string
-  sensitive   = true
-  description = "Aliyun Secret Key with Administrator Privileges"
-}
-
-variable "ali_region" {
-  type        = string
-  description = "Aliyun Region"
+  backend "local" { path = "../.secret/states/startup/terraform.tfstate" }
+  required_providers {
+    tfproj = {
+      source  = "anitya-tech/tfproj"
+      version = "0.0.2"
+    }
+  }
 }
 
 resource "random_string" "infra_id" {
@@ -26,22 +15,24 @@ resource "random_string" "infra_id" {
 }
 locals { infra_id = "infra-${random_string.infra_id.result}" }
 
-variable "base_domain" {
-  type        = string
-  description = "Base Domain for the Infrastructure"
+variable "base_domain" { type = string }
+resource "local_file" "infra" {
+  filename = provider::tfproj::format("{secret.path}/public/infra.yaml")
+  content = yamlencode({
+    id          = local.infra_id,
+    base_domain = var.base_domain,
+  })
 }
 
-resource "local_file" "cred" {
-  filename = "${module.startup.secrets_dir}/cred.yaml"
-  content = yamlencode({
-    infra_id = local.infra_id
+locals {
+  ensure_creds = [
+    provider::tfproj::ensure("{secret.path}/public/cloudflare.yaml"),
+    # email:
+    # api_key:
 
-    aliyun = {
-      access_key = var.ali_key
-      secret_key = var.ali_secret
-      region     = var.ali_region
-    }
-
-    base_domain = var.base_domain
-  })
+    provider::tfproj::ensure("{secret.path}/public/aliyun.yaml"),
+    # region:
+    # access_key:
+    # secret_key:
+  ]
 }

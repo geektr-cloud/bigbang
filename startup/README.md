@@ -33,6 +33,8 @@ cp secret.hc /mnt/geektr-secret/VeraCrypt/github.com/geektr-cloud/bigbang/secret
 
 ## 2. Init secret files
 
+manual create creds file `cloudflare.yaml` and `aliyun.yaml` in `.secert/public`
+
 ```sh
-terraform apply -var "ali_region=cn-shanghai" -var "base_domain=geektr.co"
+terraform apply -var "base_domain=geektr.co"
 ```
