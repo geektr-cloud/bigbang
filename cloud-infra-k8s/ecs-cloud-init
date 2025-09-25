@@ -46,30 +46,29 @@ write_files:
       mirrors:
         "docker.io":
           endpoint:
-            - "https://docker.m.daocloud.io"
-            - "https://dockerproxy.com"
-            - "https://docker.nju.edu.cn"
-            - "https://registry-1.docker.io"
-            - "https://mirror.baidubce.com"
+            - "https://dcr.oci.anitya.net"
         "ghcr.io":
           endpoint:
-            - "https://ghcr.dockerproxy.com"
-            - "https://ghcr.nju.edu.cn"
-            - "https://ghcr.m.daocloud.io"
+            - "https://ghcr.oci.anitya.net"
         "gcr.io":
           endpoint:
-            - "https://gcr.dockerproxy.com"
-            - "https://gcr.nju.edu.cn"
-            - "https://gcr.m.daocloud.io"
+            - "https://gcr.oci.anitya.net"
+        "k8s.gcr.io":
+          endpoint:
+            - "https://k8s.oci.anitya.net"
+        "registry.k8s.io":
+          endpoint:
+            - "https://k8s.oci.anitya.net"
         "quay.io":
           endpoint:
-            - "https://quay.dockerproxy.com"
-            - "https://quay.nju.edu.cn"
-            - "https://quay.m.daocloud.io"
+            - "https://quay.oci.anitya.net"
         "mcr.microsoft.com":
           endpoint:
-            - "https://mcr.dockerproxy.com"
-            - "https://mcr.m.daocloud.io"
+            - "https://mcr.oci.anitya.net"
+        "nvcr.io":
+          endpoint:
+            - "https://nvcr.oci.anitya.net"
+
   - path: /var/lib/rancher/k3s/server/manifests/cert-manager.yaml
     owner: root:root
     content: |
@@ -84,12 +83,15 @@ write_files:
         name: cert-manager
         namespace: cert-manager
       spec:
-        repo: https://charts.jetstack.io
+        repo: https://charts.anitya.net/cert-manager
         chart: cert-manager
         targetNamespace: cert-manager
-        version: v1.14.2
+        version: v1.18.2
         valuesContent: |-
-          installCRDs: "true"
+          installCRDs: true
+          extraArgs:
+            - --dns01-recursive-nameservers-only
+            - --dns01-recursive-nameservers=1.1.1.1:53
           nodeSelector:
             node-role.kubernetes.io/master: "true"
           webhook:
@@ -98,6 +100,7 @@ write_files:
           cainjector:
             nodeSelector:
               node-role.kubernetes.io/master: "true"
+
   - path: /var/lib/rancher/k3s/server/manifests/keel.yaml
     owner: root:root
     content: |
@@ -107,10 +110,37 @@ write_files:
         name: keel
         namespace: kube-system
       spec:
-        repo: https://charts.keel.sh
+        repo: https://charts.anitya.net/keel
         chart: keel
         targetNamespace: kube-system
-        version: v1.0.3
+        version: v1.0.5
+
+  - path: /var/lib/rancher/k3s/server/manifests/openebs.yaml
+    owner: root:root
+    content: |
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openebs
+      ---
+      apiVersion: helm.cattle.io/v1
+      kind: HelmChart
+      metadata:
+        name: openebs
+        namespace: openebs
+      spec:
+        repo: https://charts.anitya.net/openebs
+        chart: openebs
+        targetNamespace: openebs
+        version: v4.3.3
+        set:
+          engines.local.lvm.enabled: "false"
+          engines.local.zfs.enabled: "false"
+          engines.replicated.mayastor.enabled: "false"
+          localpv-provisioner.hostpathClass.enabled: "true"
+          localpv-provisioner.hostpathClass.basePath: /mnt/k3s-data/volumes
+          localpv-provisioner.hostpathClass.reclaimPolicy: Retain
+          localpv-provisioner.hostpathClass.isDefaultClass: "false"
 
   - path: /etc/rancher/k3s/config.yaml
     owner: root:root
@@ -122,7 +152,7 @@ runcmd:
     curl -sfL \
       https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | \
       INSTALL_K3S_MIRROR=cn sh -s - \
-      --system-default-registry "registry.cn-hangzhou.aliyuncs.com"
+      --system-default-registry "dcr.oci.anitya.net"
 
 disk_setup:
   /dev/vdb:

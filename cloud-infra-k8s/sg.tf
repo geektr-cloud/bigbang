@@ -1,11 +1,11 @@
 resource "alicloud_security_group" "pokemon_public" {
-  vpc_id      = local.vpc.id
-  name        = "${local.infra_id}:pokemon-public"
-  description = "Managed by Terraform"
+  vpc_id              = local.aliyun.vpc.id
+  security_group_name = "${local.infra.id}:pokemon-public"
+  description         = "Managed by Terraform"
 
   inner_access_policy = "Accept"
   security_group_type = "normal"
-  resource_group_id   = local.resource_group_id
+  resource_group_id   = local.aliyun.resource_group.id
 }
 
 resource "alicloud_security_group_rule" "pokemon_public_ipv4" {

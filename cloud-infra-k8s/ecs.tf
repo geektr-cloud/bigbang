@@ -16,9 +16,9 @@ resource "random_password" "pokemon_agent_token" {
 locals {
   psyduck = {
     hostname      = "psyduck"
-    fqdn_public   = "psyduck.pokemon.geektr.co"
-    fqdn_private  = "psyduck.pokemon.intl.geektr.co"
-    instance_name = "${local.infra_id}-pokemon-psyduck"
+    fqdn_public   = "psyduck.pokemon.${local.infra.base_domain}"
+    fqdn_private  = "psyduck.pokemon.intl.${local.infra.base_domain}"
+    instance_name = "${local.infra.id}-pokemon-psyduck"
   }
 }
 
@@ -31,16 +31,18 @@ resource "alicloud_eip_address" "psyduck" {
   payment_type         = "PayAsYouGo"
   internet_charge_type = "PayByTraffic"
   deletion_protection  = true
-  resource_group_id    = local.resource_group_id
+  resource_group_id    = local.aliyun.resource_group.id
 }
 
 resource "alicloud_instance" "psyduck" {
   instance_name = local.psyduck.instance_name
   description   = "Managed by Terraform: main server of pokemon k3s cluster"
 
-  resource_group_id = local.resource_group_id
+  lifecycle { ignore_changes = [image_id, user_data] }
 
-  instance_type = "ecs.t5-c1m2.xlarge"
+  resource_group_id = local.aliyun.resource_group.id
+
+  instance_type = "ecs.t6-c1m4.xlarge"
 
   vswitch_id = local.vswitch.id
 
@@ -60,40 +62,11 @@ resource "alicloud_instance" "psyduck" {
     description          = "data"
   }
 
-  instance_charge_type = "PrePaid"
-  period_unit          = "Month"
-  period               = 1
-  renewal_status       = "AutoRenewal"
-  auto_renew_period    = 1
+  instance_charge_type = "PostPaid"
   credit_specification = "Unlimited"
 
   host_name = local.psyduck.hostname
-  user_data = templatefile("${path.module}/ecs-cloud-init", {
-    hostname     = local.psyduck.hostname
-    fqdn_private = local.psyduck.fqdn_private
-
-    k3s_config = {
-      node-name             = local.psyduck.hostname
-      write-kubeconfig-mode = "0644"
-      node-ip               = "0.0.0.0"
-      node-external-ip      = alicloud_eip_address.psyduck.ip_address
-      tls-san = [
-        local.psyduck.fqdn_private,
-        local.psyduck.fqdn_public,
-      ]
-      node-label = [
-        "pokemon.geektr.co/infra-id=${local.infra_id}",
-        "pokemon.geektr.co/datacenter=cloud",
-        "pokemon.geektr.co/cluster-id=pokemon",
-        "pokemon.geektr.co/node-id=psyduck",
-        "aliyun.com/region=${module.alicloud.region}",
-      ],
-      kube-apiserver-arg      = "service-node-port-range=1-65535"
-      kubelet-arg             = "node-ip=::"
-      system-default-registry = "registry.cn-hangzhou.aliyuncs.com"
-      agent-token             = random_password.pokemon_agent_token.result
-    }
-  })
+  user_data = yamlencode(local.instance_user_data)
 
   security_enhancement_strategy = "Deactive"
 }
@@ -103,16 +76,20 @@ resource "alicloud_eip_association" "psyduck" {
   instance_id   = alicloud_instance.psyduck.id
 }
 
-resource "alicloud_alidns_record" "psyduck_public" {
-  domain_name = "geektr.co"
-  rr          = trimsuffix(local.psyduck.fqdn_public, ".geektr.co")
-  value       = alicloud_eip_address.psyduck.ip_address
-  type        = "A"
+resource "cloudflare_record" "psyduck" {
+  zone_id = local.cloudflare.base_domain_zone.id
+  name    = local.psyduck.fqdn_public
+  type    = "A"
+  content = alicloud_eip_address.psyduck.ip_address
+  ttl     = 1
+  proxied = false
 }
 
-resource "alicloud_alidns_record" "psyduck_private" {
-  domain_name = "geektr.co"
-  rr          = trimsuffix(local.psyduck.fqdn_private, ".geektr.co")
-  value       = alicloud_instance.psyduck.primary_ip_address
-  type        = "A"
+resource "cloudflare_record" "psyduck_private" {
+  zone_id = local.cloudflare.base_domain_zone.id
+  name    = local.psyduck.fqdn_private
+  type    = "A"
+  content = alicloud_instance.psyduck.primary_ip_address
+  ttl     = 1
+  proxied = false
 }

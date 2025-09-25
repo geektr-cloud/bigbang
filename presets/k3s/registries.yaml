@@ -1,0 +1,25 @@
+mirrors:
+  "docker.io":
+    endpoint:
+      - "https://dcr.oci.anitya.net"
+  "ghcr.io":
+    endpoint:
+      - "https://ghcr.oci.anitya.net"
+  "gcr.io":
+    endpoint:
+      - "https://gcr.oci.anitya.net"
+  "k8s.gcr.io":
+    endpoint:
+      - "https://k8s.oci.anitya.net"
+  "registry.k8s.io":
+    endpoint:
+      - "https://k8s.oci.anitya.net"
+  "quay.io":
+    endpoint:
+      - "https://quay.oci.anitya.net"
+  "mcr.microsoft.com":
+    endpoint:
+      - "https://mcr.oci.anitya.net"
+  "nvcr.io":
+    endpoint:
+      - "https://nvcr.oci.anitya.net"

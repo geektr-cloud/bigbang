@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+spec:
+  repo: https://charts.anitya.net/cert-manager
+  chart: cert-manager
+  targetNamespace: cert-manager
+  version: v1.18.2
+  valuesContent: |-
+    installCRDs: true
+    extraArgs:
+      - --dns01-recursive-nameservers-only
+      - --dns01-recursive-nameservers=1.1.1.1:53
+    nodeSelector:
+      node-role.kubernetes.io/master: "true"
+    webhook:
+      nodeSelector:
+        node-role.kubernetes.io/master: "true"
+    cainjector:
+      nodeSelector:
+        node-role.kubernetes.io/master: "true"

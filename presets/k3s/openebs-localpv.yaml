@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openebs
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: openebs
+  namespace: openebs
+spec:
+  repo: https://charts.anitya.net/openebs
+  chart: openebs
+  targetNamespace: openebs
+  version: v4.3.3
+  set:
+    engines.local.lvm.enabled: "false"
+    engines.local.zfs.enabled: "false"
+    engines.replicated.mayastor.enabled: "false"
+    localpv-provisioner.hostpathClass.enabled: "true"
+    localpv-provisioner.hostpathClass.basePath: /mnt/k3s-data/volumes
+    localpv-provisioner.hostpathClass.reclaimPolicy: Retain
+    localpv-provisioner.hostpathClass.isDefaultClass: "false"

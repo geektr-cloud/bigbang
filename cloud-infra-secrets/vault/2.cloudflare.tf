@@ -32,7 +32,7 @@ resource "vault_kv_secret_v2" "cloudflare" {
   data_json = jsonencode({
     account_id = local.creds.cloudflare.account_id
     api_token  = cloudflare_api_token.terraform.value
-    extra = {
+    infra = {
       base_domain_zone = data.cloudflare_zones.this.zones[0]
     }
   })
