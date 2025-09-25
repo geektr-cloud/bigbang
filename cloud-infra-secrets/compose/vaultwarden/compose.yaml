@@ -1,0 +1,32 @@
+services:
+  vaultwarden-pg:
+    container_name: vaultwarden-pg
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=vaultwarden
+      - POSTGRES_USER=vaultwarden
+      - POSTGRES_PASSWORD=${VAULTWARDEN_POSTGRES_PASSWORD:?error}
+    volumes:
+      - vaultwarden_pg:/var/lib/postgresql/data
+
+  vaultwarden:
+    container_name: vaultwarden
+    image: vaultwarden/server:latest
+    restart: unless-stopped
+    depends_on:
+      - vaultwarden-pg
+    environment:
+      - TZ=Asia/Shanghai
+      - SIGNUPS_ALLOWED=false
+      - INVITATIONS_ALLOWED=true
+      - SHOW_PASSWORD_HINT=false
+      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN:?error}
+      - DOMAIN=https://bitwarden.geektr.co
+      - DATABASE_URL=postgres://vaultwarden:${VAULTWARDEN_POSTGRES_PASSWORD:?error}@vaultwarden-pg:5432/vaultwarden
+    volumes:
+      - vaultwarden_data:/data
+
+volumes:
+  vaultwarden_pg:
+  vaultwarden_data:

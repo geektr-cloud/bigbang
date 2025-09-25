@@ -1,0 +1,17 @@
+services:
+  vault:
+    container_name: vault
+    image: hashicorp/vault
+    command: ["vault", "server", "-config", "/vault/config/vault.hcl"]
+    restart: unless-stopped
+    user: 0:0
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - ./vault.hcl:/vault/config/vault.hcl:ro
+      - vault_logs:/vault/logs
+      - vault_data:/vault/data
+
+volumes:
+  vault_logs:
+  vault_data:

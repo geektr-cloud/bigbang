@@ -1,0 +1,33 @@
+name: closet
+
+include:
+  - v2ray/compose.yaml
+  - vault/compose.yaml
+  - vaultwarden/compose.yaml
+  - certimate/compose.yaml
+  - keycloak/compose.yaml
+
+services:
+  caddy:
+    container_name: caddy
+    image: ghcr.oci.anitya.net/geektheripper/caddy
+    restart: unless-stopped
+    environment:
+      - CF_API_TOKEN=${CADDY_CF_API_TOKEN:?error}
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    volumes:
+      - ./caddy:/etc/caddy:ro
+      - caddy_data:/data
+
+volumes:
+  caddy_data:
+
+networks:
+  default:
+    name: closet-network
+    driver: bridge

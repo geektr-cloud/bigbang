@@ -1,0 +1,63 @@
+{
+  "inbounds": [
+    {
+      "port": 1080,
+      "listen": "0.0.0.0",
+      "protocol": "socks",
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
+      },
+      "settings": {
+        "udp": true
+      }
+    },
+    {
+      "port": 3128,
+      "listen": "0.0.0.0",
+      "protocol": "http",
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "__SERVER_ADDR__",
+            "port": __SERVER_PORT__,
+            "users": [
+              {
+                "id": "__SERVER_UUID__"
+              }
+            ]
+          }
+        ]
+      },
+      "tag": "vmess"
+    },
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    }
+  ],
+  "routing": {
+    "domainStrategy": "IPOnDemand",
+    "rules": [
+      {
+        "type": "field",
+        "outboundTag": "direct",
+        "ip": ["geoip:cn", "geoip:private"]
+      },
+      {
+        "type": "field",
+        "outboundTag": "vmess",
+        "ip": ["geoip:!cn"]
+      }
+    ]
+  }
+}

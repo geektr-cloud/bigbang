@@ -35,6 +35,18 @@ cp secret.hc /mnt/geektr-secret/VeraCrypt/github.com/geektr-cloud/bigbang/secret
 
 manual create creds file `cloudflare.yaml` and `aliyun.yaml` in `.secert/public`
 
+prepare SSH keys for automated works:
+
+```sh
+cd .secret
+ssh-keygen -t ed25519 -C "Terraform" -f terraform -q -N ""
+
+mkdir public/keys
+cp <your-public-key-file> public/keys/<your-username>.pub
+```
+
+## 3. Apply
+
 ```sh
 terraform apply -var "base_domain=geektr.co"
 ```
