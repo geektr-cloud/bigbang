@@ -21,6 +21,24 @@ variable "attributes_set" {
   default = []
 }
 
+variable "smtp_server" {
+  type = object({
+    host     = string
+    port     = optional(string, "25")
+    starttls = optional(bool, false)
+    ssl      = optional(bool, false)
+
+    auth = optional(object({
+      username = string
+      password = string
+    }), null)
+
+    from              = string
+    from_display_name = optional(string, null)
+  })
+  default = null
+}
+
 resource "keycloak_realm" "this" {
   realm             = var.domain
   enabled           = true
@@ -33,6 +51,23 @@ resource "keycloak_realm" "this" {
 
   ssl_required    = "external"
   password_policy = var.realm_password_policy
+
+  dynamic "smtp_server" {
+    for_each = var.smtp_server != null ? [var.smtp_server] : []
+    content {
+      host              = smtp_server.value.host
+      port              = smtp_server.value.port
+      starttls          = smtp_server.value.starttls
+      ssl               = smtp_server.value.ssl
+      from              = smtp_server.value.from
+      from_display_name = smtp_server.value.from_display_name
+
+      auth {
+        username = smtp_server.value.auth.username
+        password = smtp_server.value.auth.password
+      }
+    }
+  }
 
   internationalization {
     default_locale    = "zh-CN"

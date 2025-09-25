@@ -16,6 +16,7 @@ terraform {
 locals {
   creds = {
     keycloak = yamldecode(file(provider::tfproj::ensure("{secret.path}/creds/keycloak.yaml")))
+    smtp     = yamldecode(file(provider::tfproj::ensure("{secret.path}/creds/smtp.yaml")))
   }
   infra = yamldecode(file(provider::tfproj::ensure("{secret.path}/public/infra-v2.yaml")))
 }
@@ -35,6 +36,17 @@ module "keycloak" {
 
   domain             = "geektr.co"
   realm_display_name = "GeekTR Cloud"
+
+  smtp_server = {
+    host     = local.creds.smtp.host
+    port     = local.creds.smtp.port
+    starttls = local.creds.smtp.starttls
+
+    auth = local.creds.smtp.auth
+
+    from              = local.creds.smtp.from
+    from_display_name = local.creds.smtp.from_display_name
+  }
 
   superuser = {
     name       = "superuser"
