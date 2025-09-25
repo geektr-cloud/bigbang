@@ -26,11 +26,11 @@ resource "local_file" "infra" {
 
 locals {
   ensure_creds = [
-    provider::tfproj::ensure("{secret.path}/public/cloudflare.yaml"),
+    provider::tfproj::ensure("{secret.path}/creds/cloudflare.yaml"),
     # email:
     # api_key:
 
-    provider::tfproj::ensure("{secret.path}/public/aliyun.yaml"),
+    provider::tfproj::ensure("{secret.path}/creds/aliyun.yaml"),
     # region:
     # access_key:
     # secret_key:

@@ -13,9 +13,9 @@ terraform {
 }
 
 provider "alicloud" {
-  access_key = provider::tfproj::query("{secret.path}/public/aliyun.yaml", "access_key")
-  secret_key = provider::tfproj::query("{secret.path}/public/aliyun.yaml", "secret_key")
-  region     = provider::tfproj::query("{secret.path}/public/aliyun.yaml", "region")
+  access_key = provider::tfproj::query("{secret.path}/creds/aliyun.yaml", "access_key")
+  secret_key = provider::tfproj::query("{secret.path}/creds/aliyun.yaml", "secret_key")
+  region     = provider::tfproj::query("{secret.path}/creds/aliyun.yaml", "region")
 }
 
 data "alicloud_account" "this" {}

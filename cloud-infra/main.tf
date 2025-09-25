@@ -14,7 +14,7 @@ terraform {
 
 locals {
   creds = {
-    aliyun = yamldecode(file(provider::tfproj::ensure("{secret.path}/public/aliyun.yaml")))
+    aliyun = yamldecode(file(provider::tfproj::ensure("{secret.path}/creds/aliyun.yaml")))
   }
   infra = yamldecode(file(provider::tfproj::ensure("{secret.path}/public/infra.yaml")))
 }
@@ -32,12 +32,10 @@ resource "alicloud_resource_manager_resource_group" "infra" {
 }
 
 resource "local_file" "output" {
-  filename = provider::tfproj::format("{secret.path}/public/infra-v2.yaml")
-  content = yamlencode(merge(local.infra, {
-    aliyun = {
-      vpc            = alicloud_vpc.infra
-      vswitches      = alicloud_vswitch.infra
-      resource_group = alicloud_resource_manager_resource_group.infra
-    }
-  }))
+  filename = provider::tfproj::format("{secret.path}/public/infra-aliyun.yaml")
+  content = yamlencode({
+    vpc            = alicloud_vpc.infra
+    vswitches      = alicloud_vswitch.infra
+    resource_group = alicloud_resource_manager_resource_group.infra
+  })
 }
