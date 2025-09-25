@@ -18,7 +18,6 @@ locals {
     keycloak = yamldecode(file(provider::tfproj::ensure("{secret.path}/creds/keycloak.yaml")))
     smtp     = yamldecode(file(provider::tfproj::ensure("{secret.path}/creds/smtp.yaml")))
   }
-  infra = yamldecode(file(provider::tfproj::ensure("{secret.path}/public/infra-v2.yaml")))
 }
 
 provider "keycloak" {

@@ -34,6 +34,7 @@ resource "alicloud_resource_manager_resource_group" "infra" {
 resource "local_file" "output" {
   filename = provider::tfproj::format("{secret.path}/public/infra-aliyun.yaml")
   content = yamlencode({
+    region         = local.creds.aliyun.region
     vpc            = alicloud_vpc.infra
     vswitches      = alicloud_vswitch.infra
     resource_group = alicloud_resource_manager_resource_group.infra

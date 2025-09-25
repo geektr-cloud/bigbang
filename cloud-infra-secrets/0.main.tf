@@ -19,10 +19,11 @@ terraform {
 
 locals {
   creds = {
-    aliyun     = yamldecode(file(provider::tfproj::ensure("{secret.path}/public/aliyun.yaml")))
-    cloudflare = yamldecode(file(provider::tfproj::ensure("{secret.path}/public/cloudflare.yaml")))
+    aliyun     = yamldecode(file(provider::tfproj::ensure("{secret.path}/creds/aliyun.yaml")))
+    cloudflare = yamldecode(file(provider::tfproj::ensure("{secret.path}/creds/cloudflare.yaml")))
   }
-  infra = yamldecode(file(provider::tfproj::ensure("{secret.path}/public/infra-v2.yaml")))
+  infra  = yamldecode(file(provider::tfproj::ensure("{secret.path}/public/infra.yaml")))
+  aliyun = yamldecode(file(provider::tfproj::ensure("{secret.path}/public/infra-aliyun.yaml")))
 }
 
 provider "alicloud" {
@@ -40,7 +41,7 @@ resource "random_shuffle" "zone" { input = data.alicloud_zones.zones.ids }
 
 locals {
   zone    = [for i in data.alicloud_zones.zones.zones : i if i.id == random_shuffle.zone.result[0]][0]
-  vswitch = local.infra.aliyun.vswitches[local.zone.id]
+  vswitch = local.aliyun.vswitches[local.zone.id]
 }
 
 provider "cloudflare" {

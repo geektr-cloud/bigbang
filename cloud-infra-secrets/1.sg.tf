@@ -1,11 +1,11 @@
 resource "alicloud_security_group" "closet_public" {
-  vpc_id              = local.infra.aliyun.vpc.id
+  vpc_id              = local.aliyun.vpc.id
   security_group_name = "${local.infra.id}:closet-public"
   description         = "Managed by Terraform"
 
   inner_access_policy = "Accept"
   security_group_type = "normal"
-  resource_group_id   = local.infra.aliyun.resource_group.id
+  resource_group_id   = local.aliyun.resource_group.id
 }
 
 resource "alicloud_security_group_rule" "closet_public_ipv4" {

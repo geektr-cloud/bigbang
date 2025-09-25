@@ -23,7 +23,7 @@ resource "alicloud_eip_address" "closet" {
   payment_type         = "PayAsYouGo"
   internet_charge_type = "PayByTraffic"
   deletion_protection  = true
-  resource_group_id    = local.infra.aliyun.resource_group.id
+  resource_group_id    = local.aliyun.resource_group.id
 }
 
 resource "alicloud_ecs_auto_snapshot_policy" "closet" {
@@ -48,7 +48,7 @@ resource "alicloud_instance" "closet" {
   instance_name = local.closet.instance_name
   description   = "Managed by Terraform: closet server, manage all secrets"
 
-  resource_group_id = local.infra.aliyun.resource_group.id
+  resource_group_id = local.aliyun.resource_group.id
 
   instance_type = "ecs.t6-c1m2.large"
 

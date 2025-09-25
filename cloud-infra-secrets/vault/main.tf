@@ -23,10 +23,12 @@ terraform {
 
 locals {
   creds = {
-    aliyun     = yamldecode(file(provider::tfproj::ensure("{secret.path}/public/aliyun.yaml")))
-    cloudflare = yamldecode(file(provider::tfproj::ensure("{secret.path}/public/cloudflare.yaml")))
+    aliyun     = yamldecode(file(provider::tfproj::ensure("{secret.path}/creds/aliyun.yaml")))
+    cloudflare = yamldecode(file(provider::tfproj::ensure("{secret.path}/creds/cloudflare.yaml")))
+    vault      = yamldecode(file(provider::tfproj::ensure("{secret.path}/creds/vault-addr.yaml")))
   }
-  infra = yamldecode(file(provider::tfproj::ensure("{secret.path}/public/infra-v2.yaml")))
+  infra  = yamldecode(file(provider::tfproj::ensure("{secret.path}/public/infra.yaml")))
+  aliyun = yamldecode(file(provider::tfproj::ensure("{secret.path}/public/infra-aliyun.yaml")))
 }
 
 provider "alicloud" {
@@ -40,16 +42,12 @@ provider "cloudflare" {
   api_key = local.creds.cloudflare.api_key
 }
 
-variable "vault_addr" {
-  type    = string
-  default = "https://vault.geektr.co"
-}
 variable "vault_token" {
   type      = string
   sensitive = true
 }
 
 provider "vault" {
-  address = var.vault_addr
+  address = local.creds.vault.address
   token   = var.vault_token
 }
