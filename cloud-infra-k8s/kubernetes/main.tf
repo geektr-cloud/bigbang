@@ -1,5 +1,5 @@
 terraform {
-  backend "local" { path = "../../.secret/tfstates/cloud-infra-k8s/kubernetes/terraform.tfstate" }
+  backend "local" { path = "../../.secret/states/cloud-infra-k8s/kubernetes/terraform.tfstate" }
 
   required_providers {
     tfproj = {
