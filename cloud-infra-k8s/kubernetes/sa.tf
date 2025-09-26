@@ -55,11 +55,13 @@ resource "vault_kv_secret_v2" "k8s" {
   delete_all_versions = true
 
   data_json = jsonencode({
+    public_host            = data.vault_kv_secret_v2.k8s.data["public_host"]
     host                   = data.vault_kv_secret_v2.k8s.data["host"]
     cluster_ca_certificate = data.vault_kv_secret_v2.k8s.data["cluster_ca_certificate"]
     token                  = kubernetes_secret.terraform_admin.data["token"]
     infra = {
       issuer = module.issuer.issuer
+      cname  = "psyduck.pokemon.${local.infra.base_domain}"
     }
   })
 }

@@ -1,13 +1,14 @@
-module "netbox_volumes" {
-  for_each = toset(["redis", "postgres", "config", "media", "reports", "scripts"])
-
-  source = "github.com/linolabx/terraform-modules-k8s//local-volume"
-
-  namespace        = kubernetes_namespace.this.metadata.0.name
-  name             = "netbox-${each.key}-vol"
-  storage_host     = "psyduck"
-  storage_endpoint = "k3s-data"
-  capacity         = "16Gi"
+resource "kubernetes_persistent_volume_claim" "netbox" {
+  metadata {
+    namespace = kubernetes_namespace.this.metadata.0.name
+    name      = "netbox"
+  }
+  wait_until_bound = false
+  spec {
+    storage_class_name = "openebs-hostpath"
+    access_modes       = ["ReadWriteOnce"]
+    resources { requests = { storage = "42Gi" } }
+  }
 }
 
 resource "random_password" "netbox_postgres_userpass" {
@@ -53,10 +54,10 @@ locals {
   }
 }
 
-resource "kubernetes_deployment" "netbox_deployment" {
+resource "kubernetes_deployment" "netbox" {
   metadata {
     namespace = kubernetes_namespace.this.metadata.0.name
-    name      = "netbox-deployment"
+    name      = "netbox"
     labels    = { app = "netbox" }
   }
   wait_for_rollout = true
@@ -64,38 +65,26 @@ resource "kubernetes_deployment" "netbox_deployment" {
   spec {
     replicas = 1
     selector { match_labels = { app = "netbox" } }
+    strategy { type = "Recreate" }
     template {
       metadata { labels = { app = "netbox" } }
       spec {
         node_selector = { "kubernetes.io/hostname" = "psyduck" }
 
-        dynamic "volume" {
-          for_each = module.netbox_volumes
-          content {
-            name = "netbox-${volume.key}-vol"
-            persistent_volume_claim { claim_name = volume.value.pvc_name }
-          }
+        volume {
+          name = "netbox"
+          persistent_volume_claim { claim_name = kubernetes_persistent_volume_claim.netbox.metadata.0.name }
         }
 
         init_container {
           name  = "netbox-init"
           image = "alpine:3"
 
-          command = ["chown", "-R", "999:999", "/opt/netbox/netbox/media", "/opt/netbox/netbox/reports", "/opt/netbox/netbox/scripts"]
+          command = ["sh", "-c", "cd /opt/netbox/netbox && mkdir -p config media postgres redis reports scripts && chown -R 999:999 media reports scripts"]
 
           volume_mount {
-            name       = "netbox-media-vol"
-            mount_path = "/opt/netbox/netbox/media"
-          }
-
-          volume_mount {
-            name       = "netbox-reports-vol"
-            mount_path = "/opt/netbox/netbox/reports"
-          }
-
-          volume_mount {
-            name       = "netbox-scripts-vol"
-            mount_path = "/opt/netbox/netbox/scripts"
+            name       = "netbox"
+            mount_path = "/opt/netbox/netbox"
           }
         }
 
@@ -104,7 +93,8 @@ resource "kubernetes_deployment" "netbox_deployment" {
           image = "redis:7-alpine"
 
           volume_mount {
-            name       = "netbox-redis-vol"
+            name       = "netbox"
+            sub_path   = "redis"
             mount_path = "/data"
           }
         }
@@ -129,7 +119,8 @@ resource "kubernetes_deployment" "netbox_deployment" {
           }
 
           volume_mount {
-            name       = "netbox-postgres-vol"
+            name       = "netbox"
+            sub_path   = "postgres"
             mount_path = "/var/lib/postgresql/data"
           }
         }
@@ -149,17 +140,20 @@ resource "kubernetes_deployment" "netbox_deployment" {
           }
 
           volume_mount {
-            name       = "netbox-media-vol"
+            name       = "netbox"
+            sub_path   = "media"
             mount_path = "/opt/netbox/netbox/media"
           }
 
           volume_mount {
-            name       = "netbox-reports-vol"
+            name       = "netbox"
+            sub_path   = "reports"
             mount_path = "/opt/netbox/netbox/reports"
           }
 
           volume_mount {
-            name       = "netbox-scripts-vol"
+            name       = "netbox"
+            sub_path   = "scripts"
             mount_path = "/opt/netbox/netbox/scripts"
           }
         }
@@ -178,17 +172,20 @@ resource "kubernetes_deployment" "netbox_deployment" {
           }
 
           volume_mount {
-            name       = "netbox-media-vol"
+            name       = "netbox"
+            sub_path   = "media"
             mount_path = "/opt/netbox/netbox/media"
           }
 
           volume_mount {
-            name       = "netbox-reports-vol"
+            name       = "netbox"
+            sub_path   = "reports"
             mount_path = "/opt/netbox/netbox/reports"
           }
 
           volume_mount {
-            name       = "netbox-scripts-vol"
+            name       = "netbox"
+            sub_path   = "scripts"
             mount_path = "/opt/netbox/netbox/scripts"
           }
         }
@@ -207,17 +204,20 @@ resource "kubernetes_deployment" "netbox_deployment" {
           }
 
           volume_mount {
-            name       = "netbox-media-vol"
+            name       = "netbox"
+            sub_path   = "media"
             mount_path = "/opt/netbox/netbox/media"
           }
 
           volume_mount {
-            name       = "netbox-reports-vol"
+            name       = "netbox"
+            sub_path   = "reports"
             mount_path = "/opt/netbox/netbox/reports"
           }
 
           volume_mount {
-            name       = "netbox-scripts-vol"
+            name       = "netbox"
+            sub_path   = "scripts"
             mount_path = "/opt/netbox/netbox/scripts"
           }
         }
@@ -227,29 +227,20 @@ resource "kubernetes_deployment" "netbox_deployment" {
 }
 
 module "netbox_ingress" {
-  source = "github.com/linolabx/terraform-modules-k8s//ingress-traefik"
+  source = "github.com/linolabx/tfmodules?ref=k8s-ingress-traefik@v0.0.6"
 
-  namespace = kubernetes_namespace.this.metadata.0.name
+  namespace    = kubernetes_namespace.this.metadata.0.name
+  issuer       = local.k8s.issuer
+  cert_domains = [local.infra.base_domain]
 
-  app = {
-    name = "netbox"
-    port = 8080
-  }
-
-  domain = "netbox.geektr.co"
-
-  issuer = module.kubernetes.extra.cluster_issuer
-  tls = {
-    hosts       = ["*.geektr.co"]
-    secret_name = "tls-co-geektr"
-  }
-
-  redirect_https = true
+  hostmap = [
+    { domain = "netbox.${local.infra.base_domain}", app = "netbox", port = 8080 },
+  ]
 }
 
-resource "alicloud_alidns_record" "netbox_public" {
-  domain_name = "geektr.co"
-  rr          = "netbox"
-  value       = module.kubernetes.extra.primary_domain
-  type        = "CNAME"
+resource "cloudflare_record" "netbox_public" {
+  zone_id = local.cloudflare.base_domain_zone.id
+  name    = "netbox"
+  type    = "CNAME"
+  content = local.k8s.cname
 }
