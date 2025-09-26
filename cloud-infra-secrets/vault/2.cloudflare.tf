@@ -1,5 +1,6 @@
 data "cloudflare_api_token_permission_groups" "all" {}
 
+data "cloudflare_user" "this" {}
 data "cloudflare_zones" "this" {
   filter { name = local.infra.base_domain }
 }
@@ -9,9 +10,9 @@ resource "cloudflare_api_token" "terraform" {
 
   policy {
     permission_groups = [
-      data.cloudflare_api_token_permission_groups.all.account["Account API Tokens Write"]
+      data.cloudflare_api_token_permission_groups.all.user["API Tokens Write"]
     ]
-    resources = { "com.cloudflare.api.account.${local.creds.cloudflare.account_id}" = "*" }
+    resources = { "com.cloudflare.api.user.${data.cloudflare_user.this.id}" = "*" }
   }
 
   policy {
@@ -30,6 +31,7 @@ resource "vault_kv_secret_v2" "cloudflare" {
   delete_all_versions = true
 
   data_json = jsonencode({
+    email      = local.creds.cloudflare.email
     account_id = local.creds.cloudflare.account_id
     api_token  = cloudflare_api_token.terraform.value
     infra = {

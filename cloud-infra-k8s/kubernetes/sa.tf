@@ -1,24 +1,39 @@
-module "kubernetes_admin" {
-  source = "github.com/geektheripper/terraform-helpers//providers/k8s/vault-sa/new"
+locals {
+  cluster_name = "pokemon"
+}
 
-  vault_mount = module.vault.mount
-  vault_key   = "infra/kubernetes-pokemon/tokens/terraform-admin"
+module "issuer" {
+  source = "/home/geektr/projects/github.com/linolabx/tfmodules/k8s-issuer-cluster-cf"
 
-  name      = "terraform-admin"
-  namespace = "kube-system"
+  cluster_name = local.cluster_name
+  identifier   = "global"
 
-  host                   = data.vault_kv_secret_v2.this.data["host"]
-  cluster_ca_certificate = data.vault_kv_secret_v2.this.data["cluster_ca_certificate"]
+  acme = { email = data.vault_kv_secret_v2.cloudflare.data["email"] }
 
-  extra = {
-    primary_domain = "psyduck.pokemon.geektr.co"
-    cluster_issuer = "letsencrypt-prod"
-    middlewares    = local.middlewares
+  zones = [local.cloudflare.base_domain_zone]
+}
+
+resource "kubernetes_service_account" "terraform_admin" {
+  metadata {
+    name      = "terraform-admin"
+    namespace = "kube-system"
   }
+  automount_service_account_token = true
+}
+
+resource "kubernetes_secret" "terraform_admin" {
+  metadata {
+    name        = "terraform-admin"
+    namespace   = "kube-system"
+    annotations = { "kubernetes.io/service-account.name" = "terraform-admin" }
+  }
+  type = "kubernetes.io/service-account-token"
+
+  wait_for_service_account_token = true
 }
 
 resource "kubernetes_cluster_role_binding" "terraform_admin" {
-  metadata { name = module.kubernetes_admin.name }
+  metadata { name = "terraform-admin" }
 
   role_ref {
     api_group = "rbac.authorization.k8s.io"
@@ -28,7 +43,23 @@ resource "kubernetes_cluster_role_binding" "terraform_admin" {
 
   subject {
     kind      = "ServiceAccount"
-    name      = module.kubernetes_admin.name
-    namespace = module.kubernetes_admin.namespace
+    name      = "terraform-admin"
+    namespace = "kube-system"
   }
+}
+
+resource "vault_kv_secret_v2" "k8s" {
+  mount = local.creds.vault.mount
+  name  = "infra/k8s-pokemon/tokens/terraform-admin"
+
+  delete_all_versions = true
+
+  data_json = jsonencode({
+    host                   = data.vault_kv_secret_v2.k8s.data["host"]
+    cluster_ca_certificate = data.vault_kv_secret_v2.k8s.data["cluster_ca_certificate"]
+    token                  = kubernetes_secret.terraform_admin.data["token"]
+    infra = {
+      issuer = module.issuer.issuer
+    }
+  })
 }
